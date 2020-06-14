@@ -1,26 +1,36 @@
+import os
 import re
 import requests
 import time
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
-CHROME_EXECUTABLE_PATH = "./chromedriver.exe"
+#for windows file .exe
+# CHROME_EXECUTABLE_PATH = os.getenv('CHROM_DRIVER_FILE', "./chromedriver.exe")
+# print(CHROME_EXECUTABLE_PATH)
 WEB_BASE_HREF = 'https://citybus.taichung.gov.tw'
+
 HOME_PAGE_URI = 'https://citybus.taichung.gov.tw/ebus'
-OTHER_LINK_URI = 'https://citybus.taichung.gov.tw/ebus/other-links'
+
+
+SELENIUM_REMOTE = os.getenv('SELENIUM_REMOTE', "http://localhost:4444/wd/hub")
 uriNotHttpRegEx = '^(?!http(s)?).*'
 
 web_is_not_found_regex = '404'
-# print(re.search(uriNotHttpRegEx, URI))
 # URI = 'https://www.cwb.gov.tw/V8/C/'
 
 def get_page_source_by_chrome(uri):
   chrome_options = Options()
   chrome_options.add_argument('--headless')
   chrome_options.add_argument('--disable-gpu')
+  chrome_options.add_argument('--disable-dev-shm-usage')
 
-  driver = webdriver.Chrome(executable_path=CHROME_EXECUTABLE_PATH, chrome_options=chrome_options)
+  driver = webdriver.Remote(
+    command_executor=SELENIUM_REMOTE,
+    desired_capabilities=DesiredCapabilities.CHROME
+  )
   driver.get(uri)
   # wait for quering datas
   time.sleep(2)
@@ -30,6 +40,11 @@ def get_page_source_by_chrome(uri):
 def getHrefFromLink(link):
   href = link.get('href')
   return href
+
+def getLinksAllHrefs(links):
+  linkHrefs = map(getHrefFromLink, links)
+  linkHrefsList = list(linkHrefs)
+  return linkHrefsList
 
 def checkHrefIsShortLink(link):
   matchedRes = re.search(uriNotHttpRegEx, link)
@@ -47,8 +62,7 @@ def getAllHrefShortLinks(uri):
     quriedHTML = crawlWeb(uri)
     links = quriedHTML.find_all('a')
 
-    linkHrefs = map(getHrefFromLink, links)
-    linkHrefsList = list(linkHrefs)
+    linkHrefsList = getLinksAllHrefs(links)
     filteredHrefs = filter(checkHrefIsShortLink, linkHrefsList)
     filteredHrefsList = list(filteredHrefs)
 
@@ -77,6 +91,7 @@ def findAllHrefPagesInHomePageWhichIs404():
   for link in links:
     uri = WEB_BASE_HREF + link
     is404 = checkPageIs404(uri)
+    print('Checking: ', uri)
     if(is404):
       page404Links.append(link)
 
@@ -88,5 +103,6 @@ def findAllHrefPagesInHomePageWhichIs404():
 
 # getAllHrefShortLinks(HOME_PAGE_URI)
 # checkPageIs404(HOME_PAGE_URI)
+
 findAllHrefPagesInHomePageWhichIs404()
 
