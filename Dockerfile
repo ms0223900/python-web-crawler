@@ -6,6 +6,7 @@ COPY . /python-app
 
 RUN pip3 install -r requirements.txt
 
+EXPOSE 5000
 # ENTRYPOINT ["sh", "/python-app/install.sh"]
 
-CMD ["python", "test-web-crawler.py"]
+CMD ["python", "crawl_uri.py"]

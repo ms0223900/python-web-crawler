@@ -6,13 +6,15 @@ services:
     volumes: 
       - /dev/shm:/dev/shm
     ports:
-    - 4444:4444
+      - 4444:4444
   python-web-crawler:
-    image: python-web-crawler:1.0.0
+    image: python-web-crawler:1.1.0
     depends_on: 
       - selenium
     restart: always
     environment: 
       - SELENIUM_REMOTE=http://selenium:4444/wd/hub
       - CHROM_DRIVER_FILE=/usr/local/bin/chromedriver
-      - WEB_URI=https://tw.yahoo.com/
+      - WEB_URI=https://news.google.com/topstories?hl=zh-TW&gl=TW&ceid=TW:zh-Hant
+    ports: 
+      - 5000:5000
